@@ -1,0 +1,85 @@
+N° de Viajes Promedio
+SELECT
+  AVG(num_viajes) AS promedio_num_viajes
+FROM (
+  SELECT
+    DATE(starttime) AS fecha,
+    COUNT(*) AS num_viajes
+  FROM
+    `cicloviajes-410721.datos.citibike_trips`
+  GROUP BY
+    fecha
+)
+
+Metricas historicas
+
+WITH DuracionViajes AS (
+  SELECT
+    DATE(starttime) AS fecha,
+    COUNT(*) AS num_viajes,
+    MAX(tripduration) AS max_duracion,
+    MIN(tripduration) AS min_duracion,
+    AVG(tripduration) AS promedio_duracion,
+    STDDEV(tripduration) AS desviacion_estandar_duracion
+  FROM
+    `cicloviajes-410721.datos.citibike_trips`
+  GROUP BY
+    fecha
+)
+
+SELECT
+  MAX(max_duracion) AS max_duracion,
+  MIN(min_duracion) AS min_duracion,
+  AVG(promedio_duracion) AS promedio_duracion,
+  STDDEV(desviacion_estandar_duracion) AS desviacion_estandar_duracion
+FROM
+  DuracionViajes;
+
+Viajes totales acumulados
+
+SELECT
+  COUNT(tripduration) AS total_viajes
+FROM
+  `cicloviajes-410721.datos.citibike_trips`;
+
+CRECIMIENTO DIARIO
+
+WITH ViajesDiarios AS (
+  SELECT
+    DATE(starttime) AS fecha,
+    COUNT(*) AS num_viajes
+  FROM
+    `cicloviajes-410721.datos.citibike_trips`
+  GROUP BY
+    fecha
+)
+
+SELECT
+  fecha,
+  num_viajes,
+  LAG(num_viajes) OVER (ORDER BY fecha) AS num_viajes_anterior,
+  (num_viajes - LAG(num_viajes) OVER (ORDER BY fecha)) AS crecimiento_diario
+FROM
+  ViajesDiarios
+ORDER BY
+  fecha;
+
+TOTAL DE VIAJES POR USUARIO 
+
+SELECT
+  usertype,
+  gender,
+  ROUND(AVG(tripduration), 2) AS duracion_promedio,
+  COUNT(*) AS total_viajes,
+  ROUND(AVG(EXTRACT(YEAR FROM CURRENT_DATE()) - birth_year), 2) AS edad_promedio
+FROM
+  `cicloviajes-410721.datos.citibike_trips`
+WHERE
+  usertype IS NOT NULL
+  AND gender IS NOT NULL
+  AND birth_year IS NOT NULL
+GROUP BY
+  usertype, gender
+ORDER BY
+  usertype, gender;
+
