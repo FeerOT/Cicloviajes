@@ -1,4 +1,6 @@
+
 N° de Viajes Promedio
+
 SELECT
   AVG(num_viajes) AS promedio_num_viajes
 FROM (
